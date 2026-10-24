@@ -1,0 +1,1 @@
+<x-resource-index module="materias" :rows="$materias" title="Materias" singular="Nueva materia" description="El conocimiento, organizado para compartirlo." :columns="['Materia', 'Sigla', 'Docentes y cursos']" :search="true" />

@@ -1,0 +1,1 @@
+<x-resource-index module="periodos" :rows="$periodos" title="Periodos académicos" singular="Nuevo periodo" description="Define el ritmo de cada gestión académica." :columns="['Periodo', 'Gestión', 'Registros']" :gestiones="$gestiones" />

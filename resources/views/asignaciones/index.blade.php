@@ -1,0 +1,1 @@
+<x-resource-index module="asignaciones" :rows="$asignaciones" title="Asignaciones" singular="Nueva asignación" description="El docente indicado, en el espacio indicado." :columns="['Docente', 'Materia', 'Curso y gestión']" :gestiones="$gestiones" :docentes="$docentes" />

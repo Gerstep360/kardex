@@ -1,0 +1,1 @@
+<x-resource-index module="cursos" :rows="$cursos" title="Cursos y paralelos" singular="Nuevo curso" description="Organiza los espacios donde sucede el aprendizaje." :columns="['Curso', 'Gestión', 'Estudiantes', 'Materias']" :gestiones="$gestiones" />

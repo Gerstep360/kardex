@@ -1,0 +1,2 @@
+@if(session('success'))<div class="alert alert-success" role="status"><x-icon name="check" /><span>{{ session('success') }}</span><button type="button" class="icon-button" data-dismiss aria-label="Cerrar mensaje"><x-icon name="close" /></button></div>@endif
+@if($errors->any())<div class="alert alert-error" role="alert" tabindex="-1"><x-icon name="file" /><div><strong>Revisa la información para continuar.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>@endif

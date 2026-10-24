@@ -1,0 +1,1 @@
+<x-resource-index module="matriculas" :rows="$matriculas" title="Matrículas" singular="Nueva matrícula" description="Conecta a cada estudiante con su siguiente etapa." :columns="['Estudiante', 'Curso', 'Gestión']" :gestiones="$gestiones" :cursos="$cursos" />

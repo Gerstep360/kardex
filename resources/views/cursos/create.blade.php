@@ -1,0 +1,1 @@
+<x-resource-form module="cursos" :record="$curso" title="Nuevo curso"  />

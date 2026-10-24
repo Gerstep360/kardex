@@ -1,0 +1,1 @@
+<x-resource-index module="estudiantes" :rows="$estudiantes" title="Estudiantes" singular="Nuevo estudiante" description="Cada estudiante tiene una historia. Acompaña la suya desde aquí." :columns="['Estudiante', 'Curso actual', 'Estado']" :search="true" />

@@ -1,0 +1,1 @@
+<x-resource-form module="periodos" :record="$periodo" title="Nuevo periodo"  />

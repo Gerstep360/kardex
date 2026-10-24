@@ -1,0 +1,1 @@
+<x-resource-form module="materias" :record="$materia" title="Editar materia"  />

@@ -1,0 +1,1 @@
+<x-resource-form module="estudiantes" :record="$estudiante" title="Editar estudiante"  />

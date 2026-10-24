@@ -1,0 +1,1 @@
+<x-resource-form module="asignaciones" :record="$asignacion" title="Nueva asignación" :docentes="$docentes" :materias="$materias" :cursos="$cursos" />

@@ -1,0 +1,1 @@
+<x-resource-index module="usuarios" :rows="$usuarios" title="Usuarios" singular="Nuevo usuario" description="Las personas que hacen posible cada avance." :columns="['Usuario', 'Rol', 'Estado']" :search="true" />

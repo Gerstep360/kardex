@@ -1,0 +1,1 @@
+<a href="{{ auth()->check() ? route('dashboard') : route('login') }}" {{ $attributes->merge(['class' => 'brand']) }} aria-label="Kardex, inicio"><span class="brand-mark"><x-icon name="book" /></span><span>kardex<span class="brand-dot">↗</span></span></a>

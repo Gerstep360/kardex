@@ -1,0 +1,2 @@
+@props(['gestiones', 'gestion', 'action'])
+<form method="GET" action="{{ $action }}" class="heading-actions"><label for="gestion" class="sr-only">Gestión académica</label><select name="gestion" id="gestion">@foreach($gestiones->push((int) date('Y'))->unique()->sortDesc() as $year)<option value="{{ $year }}" @selected($gestion == $year)>Gestión {{ $year }}</option>@endforeach</select><button class="button button-secondary" type="submit">Consultar</button></form>

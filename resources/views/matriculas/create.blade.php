@@ -1,0 +1,1 @@
+<x-resource-form module="matriculas" :record="$matricula" title="Nueva matrícula" :estudiantes="$estudiantes" :cursos="$cursos" />

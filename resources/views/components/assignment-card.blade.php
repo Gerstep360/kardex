@@ -1,0 +1,2 @@
+@props(['asignacion', 'href'])
+<a {{ $attributes->merge(['class' => 'course-card', 'href' => $href]) }}><div class="course-card-top"><span class="course-icon"><x-icon name="book" /></span><x-badge tone="primary">{{ $asignacion->materia->sigla }}</x-badge></div><h3>{{ $asignacion->materia->nombre }}</h3><p>{{ $asignacion->curso->nombre }} · Paralelo {{ $asignacion->curso->paralelo }}</p><div class="course-card-bottom"><span><x-icon name="calendar" /> Gestión {{ $asignacion->gestion }}</span><span class="text-link">Abrir <x-icon name="arrow" /></span></div></a>

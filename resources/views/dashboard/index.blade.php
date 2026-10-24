@@ -1,0 +1,31 @@
+<x-app title="Inicio">
+    <x-page-heading title="Tu gestión, en orden." description="Lo esencial a la vista. El siguiente paso, a un clic." eyebrow="UN NUEVO DÍA PARA AVANZAR">
+        @if($user->esAdministrador())<a href="{{ route('matriculas.create') }}" class="button button-secondary"><x-icon name="file" /> Matricular</a><a href="{{ route('estudiantes.create') }}" class="button"><x-icon name="plus" /> Nuevo estudiante</a>@else<a href="{{ route('notas.index') }}" class="button"><x-icon name="edit" /> Registrar calificaciones</a>@endif
+    </x-page-heading>
+    <section class="overview-strip" aria-label="Resumen académico">
+        <div class="overview-label"><span class="status-dot"></span><span>GESTIÓN<br><strong>{{ date('Y') }}</strong></span></div>
+        @php($stats = $user->esAdministrador() ? [['Estudiantes', $metricas['estudiantes'], 'users', 'estudiantes.index'], ['Docentes', $metricas['docentes'], 'school', 'usuarios.index'], ['Cursos', $metricas['cursos'], 'book', 'cursos.index'], ['Materias', $metricas['materias'], 'file', 'materias.index']] : [['Asignaciones', $metricas['total_asignaciones'], 'file', 'notas.index'], ['Mis cursos', $metricas['cursos_asignados'], 'school', 'notas.index'], ['Mis materias', $metricas['materias_asignadas'], 'book', 'notas.index'], ['Periodos', $periodos->count(), 'calendar', 'notas.index']])
+        @foreach($stats as [$label, $value, $icon, $route])<a class="overview-stat" href="{{ route($route) }}"><span><x-icon :name="$icon" /> {{ $label }}</span><strong>{{ str_pad($value, 2, '0', STR_PAD_LEFT) }}<x-icon name="arrow" /></strong></a>@endforeach
+    </section>
+    <div class="dashboard-grid">
+        <section class="course-register">
+            <div class="register-heading"><div><p class="eyebrow">{{ $user->esAdministrador() ? 'EL PUNTO DE PARTIDA' : 'TU ESPACIO DE TRABAJO' }}</p><h2>{{ $user->esAdministrador() ? 'Cursos de esta gestión' : 'Mis materias' }}</h2></div><a href="{{ route($user->esAdministrador() ? 'cursos.index' : 'notas.index') }}" class="text-link">Ver todos <x-icon name="arrow" /></a></div>
+            @if($user->esAdministrador())
+                <div class="course-list">
+                @forelse($cursosResumen as $curso)<a href="{{ route('cursos.show', $curso) }}" class="course-row"><span class="course-index">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><span class="course-row-name"><strong>{{ $curso->nombre }}</strong><small>Paralelo {{ $curso->paralelo }} · {{ $curso->asignaciones_count }} materias asignadas</small></span><span class="course-enrollment"><x-icon name="users" /> {{ $curso->matriculas_count }}<small>estudiantes</small></span><span class="course-open" aria-label="Abrir curso"><x-icon name="arrow" /></span></a>
+                @empty<x-empty-state title="Empecemos por el primer curso." description="Crea un curso. Después podrás matricular estudiantes y asignar docentes."><a class="button" href="{{ route('cursos.create') }}"><x-icon name="plus" /> Crear curso</a></x-empty-state>@endforelse
+                </div>
+            @else
+                <div class="course-list">@forelse($asignaciones as $asignacion)<a href="{{ route('notas.planilla', ['asignacion_id' => $asignacion->id]) }}" class="course-row"><span class="course-index">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><span class="course-row-name"><strong>{{ $asignacion->materia->nombre }}</strong><small>{{ $asignacion->curso->nombre }} · Paralelo {{ $asignacion->curso->paralelo }} · {{ $asignacion->gestion }}</small></span><span class="course-open"><x-icon name="arrow" /></span></a>@empty<x-empty-state title="Tu próxima materia aparecerá aquí." description="La dirección debe asignarte materias y cursos para comenzar a calificar." />@endforelse</div>
+            @endif
+            <div class="register-footnote"><x-icon name="book" /><span>{{ $user->esAdministrador() ? 'Abre un curso para ver sus estudiantes, materias y docentes.' : 'Abre una materia para ingresar a su planilla de calificaciones.' }}</span></div>
+        </section>
+        <aside class="dashboard-aside">
+            <section class="workflow-panel"><div class="workflow-heading"><span class="eyebrow">SIN DAR VUELTAS</span><x-icon name="arrow" /></div><h2>{{ $user->esAdministrador() ? '¿Qué hacemos hoy?' : 'Del aula al registro.' }}</h2><p>Elige una tarea y continúa.</p>
+            @php($shortcuts = $user->esAdministrador() ? [['cursos.create','Crear un curso','Define curso, paralelo y gestión.'],['matriculas.create','Matricular estudiantes','Vincula a cada estudiante con su curso.'],['asignaciones.create','Asignar docentes','Conecta personas y materias.'],['reportes.index','Revisar resultados','Consulta, imprime o exporta.']] : [['notas.index','Registrar calificaciones','Elige una materia y un periodo.'],['promedios.index','Consultar promedios','Identifica registros pendientes.'],['reportes.index','Generar un reporte','Imprime o exporta los resultados.']])
+            @foreach($shortcuts as [$route, $label, $hint])<a class="workflow-link" href="{{ route($route) }}"><span class="step-number">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><span><strong>{{ $label }}</strong><small>{{ $hint }}</small></span><x-icon name="chevron" /></a>@endforeach
+            </section>
+        </aside>
+    </div>
+    <section class="periods-section"><div class="section-heading"><div><p class="eyebrow">UN PASO A LA VEZ</p><h2>Periodos académicos</h2></div>@if($user->esAdministrador())<a href="{{ route('periodos.index') }}" class="text-link">Gestionar periodos <x-icon name="arrow" /></a>@else<span class="filter-note">Gestión {{ date('Y') }}</span>@endif</div><div class="periods-grid">@forelse($periodos as $periodo)<div class="period-block"><span class="period-number">{{ str_pad($periodo->numero, 2, '0', STR_PAD_LEFT) }}</span><div><strong>{{ $periodo->nombre }}</strong><small>Gestión {{ $periodo->gestion }}</small></div><x-icon name="calendar" /></div>@empty<div class="panel full-width"><x-empty-state title="Organiza los tiempos de esta gestión." description="Todavía no hay periodos académicos configurados." icon="calendar" /></div>@endforelse</div></section>
+</x-app>
