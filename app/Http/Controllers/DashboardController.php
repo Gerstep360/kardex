@@ -17,6 +17,9 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $gestion = (int) date('Y');
+        if ($user->esSecretaria()) {
+            return view('dashboard.secretaria');
+        }
         $periodos = Periodo::where('gestion', $gestion)->orderBy('numero')->get();
 
         if ($user->esAdministrador()) {

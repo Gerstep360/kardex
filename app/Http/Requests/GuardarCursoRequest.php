@@ -18,6 +18,8 @@ class GuardarCursoRequest extends FormRequest
 
         return [
             'nombre' => ['required', 'string', 'max:100'],
+            'nivel' => ['nullable', 'string', 'max:100'],
+            'turno' => ['nullable', 'string', 'max:30'],
             'paralelo' => ['required', 'string', 'max:20'],
             'gestion' => [
                 'required',

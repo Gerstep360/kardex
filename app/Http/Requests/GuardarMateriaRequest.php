@@ -7,6 +7,13 @@ use Illuminate\Validation\Rule;
 
 class GuardarMateriaRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('orden') === null) {
+            $this->merge(['orden' => 0]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user() && $this->user()->esAdministrador();
@@ -18,6 +25,8 @@ class GuardarMateriaRequest extends FormRequest
 
         return [
             'nombre' => ['required', 'string', 'max:120'],
+            'campo' => ['nullable', 'string', 'max:100'],
+            'orden' => ['nullable', 'integer', 'between:0,1000'],
             'sigla' => [
                 'required',
                 'string',

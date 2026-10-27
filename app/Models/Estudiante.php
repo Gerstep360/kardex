@@ -10,6 +10,22 @@ class Estudiante extends Model
 {
     use HasFactory;
 
+    public const DATOS_OBLIGATORIOS = [
+        'codigo' => 'Código RUDE',
+        'nombres' => 'Nombres',
+        'apellido_paterno' => 'Apellido paterno',
+        'apellido_materno' => 'Apellido materno',
+        'genero' => 'Género',
+        'fecha_nacimiento' => 'Fecha de nacimiento',
+        'lugar_nacimiento' => 'Lugar de nacimiento',
+        'documento_identidad' => 'Número de C.I.',
+    ];
+
+    public function datosFaltantes(): array
+    {
+        return array_filter(self::DATOS_OBLIGATORIOS, fn ($etiqueta, $campo) => blank($this->getAttribute($campo)), ARRAY_FILTER_USE_BOTH);
+    }
+
     protected $table = 'estudiantes';
 
     protected $fillable = [
@@ -17,7 +33,18 @@ class Estudiante extends Model
         'nombres',
         'apellidos',
         'estado',
+        'apellido_paterno',
+        'apellido_materno',
+        'genero',
+        'fecha_nacimiento',
+        'lugar_nacimiento',
+        'documento_identidad',
     ];
+
+    protected function casts(): array
+    {
+        return ['fecha_nacimiento' => 'date'];
+    }
 
     public function matriculas(): HasMany
     {
@@ -32,6 +59,7 @@ class Estudiante extends Model
     public function matriculaPorGestion(?int $gestion = null)
     {
         $gestion = $gestion ?? date('Y');
+
         return $this->matriculas()->where('gestion', $gestion)->first();
     }
 }

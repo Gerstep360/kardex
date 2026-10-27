@@ -10,110 +10,66 @@ use Illuminate\Support\Collection;
 
 class CalculoPromediosService
 {
-    /**
-     * Calcula el promedio de una matrícula para una asignación específica a lo largo de los periodos.
-     *
-     * @param Matricula $matricula
-     * @param Asignacion $asignacion
-     * @param Collection|null $periodos
-     * @return array{
-     *     promedio: float|null,
-     *     estado: string, // 'completo', 'incompleto', 'sin_notas'
-     *     notas_registradas: int,
-     *     periodos_totales: int,
-     *     notas_detalle: array
-     * }
-     */
-    public function calcularPromedioMatricula(Matricula $matricula, Asignacion $asignacion, ?Collection $periodos = null): array
+    public function resumirCalificaciones(array $calificaciones, int $cantidadPeriodos): array
     {
-        if (!$periodos) {
-            $periodos = Periodo::where('gestion', $asignacion->gestion)
-                ->orderBy('numero', 'asc')
-                ->get();
-        }
-
-        $totalPeriodos = $periodos->count();
-        $cantidadEsperada = config('academico.cantidad_periodos_completo', $totalPeriodos);
-
-        $notas = Nota::where('matricula_id', $matricula->id)
-            ->where('asignacion_id', $asignacion->id)
-            ->whereIn('periodo_id', $periodos->pluck('id'))
-            ->get()
-            ->keyBy('periodo_id');
-
-        $notasDetalle = [];
-        $sumaNotas = 0;
-        $conteoRegistradas = 0;
-
-        foreach ($periodos as $periodo) {
-            $notaModel = $notas->get($periodo->id);
-            if ($notaModel && $notaModel->nota !== null) {
-                $valor = (float) $notaModel->nota;
-                $sumaNotas += $valor;
-                $conteoRegistradas++;
-                $notasDetalle[$periodo->id] = [
-                    'periodo' => $periodo->nombre,
-                    'numero' => $periodo->numero,
-                    'nota' => $valor,
-                    'observacion' => $notaModel->observacion,
-                ];
-            } else {
-                $notasDetalle[$periodo->id] = [
-                    'periodo' => $periodo->nombre,
-                    'numero' => $periodo->numero,
-                    'nota' => null,
-                    'observacion' => null,
-                ];
-            }
-        }
-
-        if ($conteoRegistradas === 0) {
-            return [
-                'promedio' => null,
-                'estado' => 'sin_notas',
-                'notas_registradas' => 0,
-                'periodos_totales' => $totalPeriodos,
-                'notas_detalle' => $notasDetalle,
-            ];
-        }
-
-        // Cálculo aritmético simple sobre periodos registrados
-        $promedioCalculado = $sumaNotas / $conteoRegistradas;
-        $decimales = config('academico.decimales_permitidos', 2);
-        $promedioFinal = round($promedioCalculado, $decimales);
-
-        $estado = ($conteoRegistradas >= $cantidadEsperada) ? 'completo' : 'incompleto';
+        $cantidadPeriodos = max(1, $cantidadPeriodos);
+        $registradas = array_filter($calificaciones, fn ($valor) => $valor !== null && $valor !== '');
+        $suma = array_sum($registradas);
+        $promedio = $cantidadPeriodos === 1 && $registradas === []
+            ? null
+            : round($suma / $cantidadPeriodos, (int) config('academico.decimales_permitidos', 2));
+        $estado = $promedio === null ? 'sin_notas' : ($promedio >= config('academico.nota_aprobacion', 51) ? 'aprobado' : 'reprobado');
 
         return [
-            'promedio' => $promedioFinal,
+            'promedio' => $promedio,
             'estado' => $estado,
-            'notas_registradas' => $conteoRegistradas,
-            'periodos_totales' => $totalPeriodos,
-            'notas_detalle' => $notasDetalle,
+            'notas_registradas' => count($registradas),
+            'periodos_totales' => $cantidadPeriodos,
+            'pendientes' => max(0, $cantidadPeriodos - count($registradas)),
         ];
     }
 
-    /**
-     * Calcula consolidado de promedios para todos los estudiantes matriculados en una asignación.
-     */
+    public function calcularPromedioMatricula(Matricula $matricula, Asignacion $asignacion, ?Collection $periodos = null): array
+    {
+        $periodos ??= Periodo::where('gestion', $asignacion->gestion)->orderBy('numero')->get();
+        $notas = Nota::where('matricula_id', $matricula->id)->where('asignacion_id', $asignacion->id)
+            ->whereIn('periodo_id', $periodos->pluck('id'))->get()->keyBy('periodo_id');
+        $detalle = $periodos->mapWithKeys(function ($periodo) use ($notas): array {
+            $nota = $notas->get($periodo->id);
+
+            return [$periodo->id => [
+                'periodo' => $periodo->nombre, 'numero' => $periodo->numero,
+                'nota' => $nota ? (float) $nota->nota : null, 'observacion' => $nota?->observacion,
+            ]];
+        })->all();
+
+        return $this->resumirCalificaciones(
+            array_column($detalle, 'nota'),
+            max((int) config('academico.cantidad_periodos_completo', 3), $periodos->count()),
+        ) + ['notas_detalle' => $detalle];
+    }
+
     public function obtenerConsolidadoAsignacion(Asignacion $asignacion): Collection
     {
-        $periodos = Periodo::where('gestion', $asignacion->gestion)
-            ->orderBy('numero', 'asc')
-            ->get();
+        $periodos = Periodo::where('gestion', $asignacion->gestion)->orderBy('numero')->get();
+        $matriculas = Matricula::with([
+            'estudiante',
+            'notas' => fn ($query) => $query->where('asignacion_id', $asignacion->id)->whereIn('periodo_id', $periodos->pluck('id')),
+        ])->where('curso_id', $asignacion->curso_id)->where('gestion', $asignacion->gestion)->get()
+            ->sortBy(fn ($matricula) => $matricula->estudiante->nombre_completo);
 
-        $matriculas = Matricula::with('estudiante')
-            ->where('curso_id', $asignacion->curso_id)
-            ->where('gestion', $asignacion->gestion)
-            ->get()
-            ->sortBy(fn($m) => $m->estudiante->apellidos . ' ' . $m->estudiante->nombres);
+        return $matriculas->map(function ($matricula) use ($periodos): array {
+            $porPeriodo = $matricula->notas->keyBy('periodo_id');
+            $detalle = $periodos->mapWithKeys(function ($periodo) use ($porPeriodo): array {
+                $nota = $porPeriodo->get($periodo->id);
 
-        return $matriculas->map(function ($matricula) use ($asignacion, $periodos) {
-            $calculo = $this->calcularPromedioMatricula($matricula, $asignacion, $periodos);
+                return [$periodo->id => ['periodo' => $periodo->nombre, 'numero' => $periodo->numero, 'nota' => $nota ? (float) $nota->nota : null, 'observacion' => $nota?->observacion]];
+            })->all();
+
             return [
                 'matricula' => $matricula,
                 'estudiante' => $matricula->estudiante,
-                'calculo' => $calculo,
+                'calculo' => $this->resumirCalificaciones(array_column($detalle, 'nota'), max((int) config('academico.cantidad_periodos_completo', 3), $periodos->count())) + ['notas_detalle' => $detalle],
             ];
         });
     }

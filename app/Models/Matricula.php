@@ -17,6 +17,7 @@ class Matricula extends Model
         'estudiante_id',
         'curso_id',
         'gestion',
+        'estado_matricula',
     ];
 
     protected function casts(): array

@@ -7,7 +7,6 @@ use App\Models\Curso;
 use App\Models\Periodo;
 use App\Services\CalculoPromediosService;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -81,7 +80,7 @@ class ReporteController extends Controller
             // Encabezados institucionales
             fputcsv($file, ['UNIDAD EDUCATIVA TÉCNICO HUMANÍSTICO MAESTRO PITÁGORAS II'], ';');
             fputcsv($file, ['REPORTE CONSOLIDADO DE CALIFICACIONES'], ';');
-            fputcsv($file, ['Curso:', $asignacion->curso->nombre . ' "' . $asignacion->curso->paralelo . '"', 'Gestión:', $asignacion->gestion], ';');
+            fputcsv($file, ['Curso:', $asignacion->curso->nombre.' "'.$asignacion->curso->paralelo.'"', 'Gestión:', $asignacion->gestion], ';');
             fputcsv($file, ['Materia:', $asignacion->materia->nombre, 'Docente:', $asignacion->docente->nombre], ';');
             fputcsv($file, ['Fecha de emisión:', date('d/m/Y H:i:s')], ';');
             fputcsv($file, [], ';');
@@ -92,7 +91,7 @@ class ReporteController extends Controller
                 $headerCols[] = $p->nombre;
             }
             $headerCols[] = 'Promedio';
-            $headerCols[] = 'Estado';
+            $headerCols[] = 'Resultado';
             fputcsv($file, $headerCols, ';');
 
             // Filas de datos protegidas contra Formula Injection
@@ -103,7 +102,7 @@ class ReporteController extends Controller
 
                 // Sanitizar texto que empiece con carácteres de fórmula (+, -, =, @)
                 $codigo = $this->sanitizarCsv($estudiante->codigo);
-                $nombreCompleto = $this->sanitizarCsv($estudiante->apellidos . ', ' . $estudiante->nombres);
+                $nombreCompleto = $this->sanitizarCsv($estudiante->apellidos.', '.$estudiante->nombres);
 
                 $row = [$i++, $codigo, $nombreCompleto];
 
@@ -160,7 +159,7 @@ class ReporteController extends Controller
     protected function sanitizarCsv(string $valor): string
     {
         if (in_array(substr($valor, 0, 1), ['=', '+', '-', '@'], true)) {
-            return "'" . $valor;
+            return "'".$valor;
         }
 
         return $valor;

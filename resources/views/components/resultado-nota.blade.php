@@ -1,0 +1,2 @@
+@props(['estado'])
+<x-badge :tone="match($estado) { 'aprobado' => 'success', 'reprobado' => 'danger', default => 'neutral' }">{{ match($estado) { 'aprobado' => 'Aprobado', 'reprobado' => 'Reprobado', default => 'Sin nota' } }}</x-badge>

@@ -18,6 +18,7 @@ class Nota extends Model
         'periodo_id',
         'nota',
         'observacion',
+        'importacion_id',
     ];
 
     protected function casts(): array

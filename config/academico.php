@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'pdf_memoria' => env('KARDEX_PDF_MEMORIA', '256M'),
+    'institucion' => [
+        'nombre' => 'MAESTRO PITÁGORAS II',
+        'codigo_sie' => '51980097',
+        'departamento' => 'SANTA CRUZ',
+        'distrito' => 'LA GUARDIA',
+        'direccion' => 'URB. CUMBRE DE LAS AMÉRICAS',
+    ],
     /*
     |--------------------------------------------------------------------------
     | Parámetros Académicos y Calificaciones (Configuración DEMO y Verificable)

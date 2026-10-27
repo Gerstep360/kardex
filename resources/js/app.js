@@ -49,17 +49,33 @@ document.querySelector('[data-password-toggle]')?.addEventListener('click', even
 });
 const dialog = document.querySelector('#confirm-dialog');
 let pendingForm;
+let pendingSubmitter;
 document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
     if (form.dataset.confirmed === 'true') return;
-    event.preventDefault(); pendingForm = form;
+    event.preventDefault(); pendingForm = form; pendingSubmitter = event.submitter;
     document.querySelector('#confirm-message').textContent = form.dataset.confirm;
+    if (form.hasAttribute('data-import-confirm')) {
+        document.querySelector('#confirm-message').textContent += form.elements.namedItem('politica')?.value === 'reemplazar'
+            ? '\n\nLas notas que ya están guardadas se cambiarán por las de este PDF. Los espacios vacíos no borrarán ninguna nota.'
+            : '\n\nSe conservarán las notas que ya están guardadas. Solo se agregarán las que faltan.';
+    }
+    document.querySelector('#confirm-title').textContent = form.dataset.confirmTitle || '¿Quieres continuar?';
+    document.querySelector('#confirm-accept').textContent = form.dataset.confirmAction || 'Sí, continuar';
     dialog.returnValue = 'cancel';
     dialog.showModal();
+    document.body.classList.add('dialog-open');
 }));
 dialog?.addEventListener('cancel', () => { dialog.returnValue = 'cancel'; });
 dialog?.addEventListener('close', () => {
-    if (dialog.returnValue === 'confirm' && pendingForm) { pendingForm.dataset.confirmed = 'true'; pendingForm.requestSubmit(); }
+    const form = pendingForm;
+    const submitter = pendingSubmitter;
     pendingForm = null;
+    pendingSubmitter = null;
+    document.body.classList.remove('dialog-open');
+    if (dialog.returnValue === 'confirm' && form) {
+        form.dataset.confirmed = 'true';
+        form.requestSubmit(submitter || undefined);
+    } else { submitter?.focus(); }
 });
 const gradeForm = document.querySelector('[data-grade-form]');
 let hasUnsavedGrades = false;
@@ -72,7 +88,20 @@ gradeForm?.addEventListener('submit', () => { hasUnsavedGrades = false; });
 document.querySelectorAll('form[method="POST"]').forEach(form => form.addEventListener('submit', event => {
     if (event.defaultPrevented) return;
     const button = event.submitter;
-    if (button) { button.disabled = true; button.setAttribute('aria-busy', 'true'); }
+    if (button) {
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        if (form.hasAttribute('data-import-confirm')) button.textContent = 'Guardando notas…';
+        if (form.hasAttribute('data-upload-form')) button.textContent = 'Leyendo el PDF…';
+    }
 }));
 document.querySelectorAll('[data-print]').forEach(button => button.addEventListener('click', () => window.print()));
 document.querySelector('.alert-error')?.focus();
+document.querySelectorAll('[data-academic-year]').forEach(select => select.addEventListener('change', () => {
+    const form = select.closest('form');
+    ['periodo_id', 'curso_id'].forEach(name => {
+        const field = form.elements.namedItem(name);
+        if (field) field.value = '';
+    });
+    form.requestSubmit();
+}));

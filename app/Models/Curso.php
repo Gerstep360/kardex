@@ -16,6 +16,8 @@ class Curso extends Model
         'nombre',
         'paralelo',
         'gestion',
+        'nivel',
+        'turno',
     ];
 
     protected function casts(): array

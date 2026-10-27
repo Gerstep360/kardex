@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Usuario extends Authenticatable
 {
@@ -62,5 +62,15 @@ class Usuario extends Authenticatable
     public function esDocente(): bool
     {
         return $this->rol === 'docente';
+    }
+
+    public function esSecretaria(): bool
+    {
+        return $this->rol === 'secretaria';
+    }
+
+    public function puedeConsultarBoletines(): bool
+    {
+        return $this->activo && in_array($this->rol, ['administrador', 'secretaria'], true);
     }
 }

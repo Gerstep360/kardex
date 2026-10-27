@@ -15,6 +15,8 @@ class Materia extends Model
     protected $fillable = [
         'nombre',
         'sigla',
+        'campo',
+        'orden',
     ];
 
     public function asignaciones(): HasMany

@@ -24,7 +24,7 @@ class GuardarUsuarioRequest extends FormRequest
                 'max:50',
                 Rule::unique('usuarios', 'usuario')->ignore($usuarioId),
             ],
-            'rol' => ['required', Rule::in(['administrador', 'docente'])],
+            'rol' => ['required', Rule::in(['administrador', 'docente', 'secretaria'])],
             'activo' => ['required', 'boolean'],
         ];
 

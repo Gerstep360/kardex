@@ -16,8 +16,8 @@ class EstudianteController extends Controller
         $gestion = $request->input('gestion', date('Y'));
 
         $estudiantes = Estudiante::with(['matriculas' => function ($q) use ($gestion) {
-                $q->where('gestion', $gestion)->with('curso');
-            }])
+            $q->where('gestion', $gestion)->with('curso');
+        }])
             ->when($busqueda, function ($query, $buscar) {
                 return $query->where('codigo', 'like', "%{$buscar}%")
                     ->orWhere('nombres', 'like', "%{$buscar}%")
@@ -38,7 +38,7 @@ class EstudianteController extends Controller
 
     public function store(GuardarEstudianteRequest $request): RedirectResponse
     {
-        Estudiante::create($request->validated());
+        Estudiante::create($request->safe()->except('volver_curso'));
 
         return redirect()->route('estudiantes.index')->with('success', 'Estudiante registrado satisfactoriamente.');
     }
@@ -46,6 +46,7 @@ class EstudianteController extends Controller
     public function show(Estudiante $estudiante): View
     {
         $estudiante->load(['matriculas.curso', 'matriculas.notas.asignacion.materia', 'matriculas.notas.periodo']);
+
         return view('estudiantes.show', compact('estudiante'));
     }
 
@@ -56,7 +57,11 @@ class EstudianteController extends Controller
 
     public function update(GuardarEstudianteRequest $request, Estudiante $estudiante): RedirectResponse
     {
-        $estudiante->update($request->validated());
+        $estudiante->update($request->safe()->except('volver_curso'));
+        if ($request->filled('volver_curso') && $estudiante->matriculas()->where('curso_id', $request->integer('volver_curso'))->exists()) {
+            return redirect()->route('boletines.centralizador', $request->integer('volver_curso'))
+                ->with('success', 'Datos del estudiante guardados. Ya puedes continuar con el centralizador.');
+        }
 
         return redirect()->route('estudiantes.index')->with('success', 'Datos del estudiante actualizados.');
     }

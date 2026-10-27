@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Rutas Web Modulares
@@ -15,8 +13,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-require __DIR__ . '/modules/auth.php';
-require __DIR__ . '/modules/admin.php';
-require __DIR__ . '/modules/notas.php';
-require __DIR__ . '/modules/reportes.php';
-require __DIR__ . '/modules/respaldos.php';
+require __DIR__.'/modules/auth.php';
+require __DIR__.'/modules/admin.php';
+require __DIR__.'/modules/notas.php';
+require __DIR__.'/modules/reportes.php';
+require __DIR__.'/modules/respaldos.php';
+require __DIR__.'/modules/boletines.php';
