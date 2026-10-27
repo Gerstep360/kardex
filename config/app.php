@@ -2,6 +2,8 @@
 
 return [
 
+    'local_network' => env('KARDEX_LOCAL_NETWORK', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
