@@ -4,6 +4,20 @@ namespace App\Services;
 
 class LocalQrCode
 {
+    public function svg(string $text): string
+    {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" width="444" height="444" shape-rendering="crispEdges"><rect width="37" height="37" fill="white"/><g fill="black">';
+        foreach ($this->matrix($text) as $y => $row) {
+            foreach ($row as $x => $dark) {
+                if ($dark) {
+                    $svg .= '<rect x="'.$x.'" y="'.$y.'" width="1" height="1"/>';
+                }
+            }
+        }
+
+        return $svg.'</g></svg>';
+    }
+
     /**
      * QR version 3-L, byte mode, mask 0; includes the four-module quiet zone.
      *

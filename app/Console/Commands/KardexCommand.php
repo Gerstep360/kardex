@@ -7,10 +7,10 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Exception\RuntimeException;
 use Symfony\Component\Process\Process;
 
-#[Signature('kardex {--ip= : IP local que verá el teléfono} {--port= : Puerto de acceso}')]
+#[Signature('kardex {--ip= : IP local que verá el teléfono} {--port= : Puerto de acceso} {--no-open : No abrir la imagen del QR automáticamente}')]
 #[Description('Abre Kardex en la red local y muestra un QR para el teléfono')]
 class KardexCommand extends Command
 {
@@ -65,16 +65,34 @@ class KardexCommand extends Command
         $this->newLine();
         $this->info('KARDEX · Acceso desde tu teléfono');
         $this->line("Enlace: {$url}");
-        $this->line('Conecta el teléfono al mismo Wi-Fi y escanea este QR:');
-        $this->newLine();
-        foreach ($qrCode->matrix($url) as $row) {
-            $line = '';
-            foreach ($row as $dark) {
-                $line .= $this->output->isDecorated()
-                    ? ($dark ? '<fg=black;bg=white>██</>' : '<fg=white;bg=white>██</>')
-                    : ($dark ? '██' : '  ');
+        $qrPath = storage_path('app/kardex-acceso.html');
+        $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+        $page = '<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kardex · Acceso desde tu teléfono</title>'
+            .'<body style="margin:40px auto;padding:0 20px;max-width:520px;text-align:center;font-family:system-ui;background:#f4f7f5;color:#182d25">'
+            .'<h1>Abre Kardex en tu teléfono</h1><p>Conecta tu teléfono al mismo Wi-Fi que esta computadora y escanea el QR con la cámara.</p>'
+            .'<div style="margin:24px auto;background:white;border-radius:16px;max-width:444px">'
+            .str_replace('width="444" height="444"', 'width="100%" height="100%"', $qrCode->svg($url))
+            .'</div><p>También puedes escribir este enlace:</p><p><a style="font-size:22px;color:#076c49" href="'.$safeUrl.'">'.$safeUrl.'</a></p>'
+            .'<p>Deja abierta la terminal mientras uses Kardex.</p></body></html>';
+        if (file_put_contents($qrPath, $page) === false) {
+            $this->warn('No pude guardar la imagen del QR. Puedes entrar usando el enlace de arriba.');
+        } else {
+            $this->line('QR guardado en: '.$qrPath);
+            if (! $this->option('no-open')) {
+                $open = PHP_OS_FAMILY === 'Windows'
+                    ? new Process(['powershell', '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', "Start-Process -FilePath '".str_replace("'", "''", $qrPath)."'"])
+                    : new Process([PHP_OS_FAMILY === 'Darwin' ? 'open' : 'xdg-open', $qrPath]);
+                $open->setTimeout(10);
+                try {
+                    if (! $open->run()) {
+                        $this->line('Escanea el QR que se abrió en el navegador.');
+                    } else {
+                        $this->warn('Abre el archivo indicado arriba para ver el QR.');
+                    }
+                } catch (RuntimeException $exception) {
+                    $this->warn('Abre el archivo indicado arriba para ver el QR.');
+                }
             }
-            $this->output->writeln($line, OutputInterface::OUTPUT_NORMAL);
         }
         $this->newLine();
         $this->line('Deja esta ventana abierta. Para cerrar Kardex: Ctrl+C.');
